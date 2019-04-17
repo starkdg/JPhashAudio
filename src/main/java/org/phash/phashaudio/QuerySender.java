@@ -11,10 +11,12 @@ import org.zeromq.ZMsg;
 import org.zeromq.ZFrame;
 import org.zeromq.ZMQ.Socket;
 
-/** auxiliary class to send commands to audio scout server
+/** 
+ *	aux. class for sending commands to auscoutd server app
+ *
  *  Not thread-safe
+ *
  *  @author dgs
- *  @version 1.0
  **/
 public class QuerySender {
 
@@ -27,9 +29,9 @@ public class QuerySender {
     private Socket skt;
 
     
-    /** static method to send empty message through zeromq socket
-     * @param skt zmq socket
-     * @param flags zmq flag
+    /** Method to send empty message through zeromq socket
+     * @param skt  zeromq socket
+     * @param flags zeromq flag
      **/
     public static void sendEmpty(Socket skt, int flags){
 		byte [] empty = {};
@@ -37,25 +39,28 @@ public class QuerySender {
 		emptyMsg.sendAndDestroy(skt, flags);
     }
 
+	/** Flush the socket 
+	 * @param skt
+	 **/
     public static void flushSocket(Socket skt){
 		while (skt.hasReceiveMore()){
 			skt.recv();
 		}
     }
 
-    /** static method to send string through zeromq socket
-     * @param skt zmq socket
-     * @param msg string value
-     * @param flags zmq flags
+    /** Method to send string through a zeromq socket
+     * @param skt 
+     * @param msg a string message to be sent
+     * @param flags zeromq flags
      **/
     public static void sendString(Socket skt, String msg, int flags){
 		ZFrame strMsg = new ZFrame(msg);
 		strMsg.sendAndDestroy(skt, flags);
     }
 
-    /** static method to convert byte[] to Float type in little endian order
-     * @param bytes array of bytes, byte[]
-     * @return Float value
+    /** Method to convert byte[] to Float in little endian order
+     * @param bytes 
+     * @return Float 
      **/
     public static Float convertByteArrayToFloat(byte[] bytes){
 		ByteBuffer buff = ByteBuffer.wrap(bytes).order(ByteOrder.LITTLE_ENDIAN);
@@ -65,9 +70,9 @@ public class QuerySender {
     }
 
 
-    /** static method to convert byte[] to Integer in little endian order
+    /** Method to convert byte[] to Integer in little endian order
      * @param bytes
-     * @return Integer value
+     * @return Integer
      **/
     public static Integer convertByteArrayToInteger(byte[] bytes){
 		ByteBuffer buff = ByteBuffer.wrap(bytes).order(ByteOrder.LITTLE_ENDIAN);
@@ -76,10 +81,10 @@ public class QuerySender {
 		return Integer.valueOf(val);
     }
 
-    /** static method to send int through zeromq socket
+    /** Method to send int value through zeromq socket
      * @param skt
-     * @param value int to send
-     * @param flags zeromq send flag
+     * @param value 
+     * @param flags zeromq flags
      **/
     public static void sendInt(Socket skt, int value, int flags){
 		byte[] bytearray = ByteBuffer.allocate(4).order(ByteOrder.LITTLE_ENDIAN).putInt(value).array();
@@ -87,10 +92,10 @@ public class QuerySender {
 		intMsg.sendAndDestroy(skt, flags);
     }
 
-    /** static method to send int[] through zmq socket
+    /** Method to send int[] through zmq socket
      * @param skt zeromq socket
-     * @param intarray array of int's
-     * @param flags zmq send flags
+     * @param intarray 
+     * @param flags zeromq send flags
      **/
     public static void sendIntArray(Socket skt, int[] intarray, int flags){
 		ByteBuffer tmpbuffer = ByteBuffer.allocate(intarray.length*4).order(ByteOrder.LITTLE_ENDIAN);
@@ -101,9 +106,9 @@ public class QuerySender {
 		intarraymsg.sendAndDestroy(skt, flags);
     }
 
-    /** static method to send float value through zmq socket 
+    /** Method to send float value through zmq socket 
      * @param skt zmq socket
-     * @param value float value to send
+     * @param value 
      * @param flags zmq send flags
      **/
     public static void sendFloat(Socket skt, float value, int flags){
@@ -112,9 +117,9 @@ public class QuerySender {
 		floatMsg.sendAndDestroy(skt, flags);
     }
 
-    /** aux method to send toggle 2D arrays, byte[][]
+    /** Method to send byte[][] through zeromq socket
      * @param skt zmq socket
-     * @param toggles toggle array to send
+     * @param toggles 
      * @param flags zmq send flags
      **/
     public static  void sendToggles(Socket skt, byte[][] toggles, int flags){
@@ -126,13 +131,19 @@ public class QuerySender {
 		lastrowmsg.sendAndDestroy(skt, flags);
     }
 
+	/** Method to send int[] through zeromq socket
+	 * @param skt zmq socket
+	 * @param toggles
+	 * @param flags zmq send flags
+	 **/
     public static void sendToggles(Socket skt, int[] toggles, int flags){
 		sendIntArray(skt, toggles, flags);
     }
 
-    /** constructor
-     * @param address audioscout server is running on, e.g. tcp://localhost:4005
-     **/
+    /** Constructor
+     * @param address address of auscoutd, e.g. http://localhost:4005
+	 * @param nbthreads number I/O threads to use
+	 **/
     public QuerySender(String address, int nbthreads){
 		this.zmqctx = new ZContext();
 		zmqctx.setIoThreads(nbthreads);
@@ -140,8 +151,8 @@ public class QuerySender {
 		skt.connect(address);
     }
 
-    /** send synchronization command to server
-     * @param timeout milliseconds
+    /** Send sync command to server
+     * @param timeout (in milliseconds)
      * @return String ack message from server
      **/
     public String sendSync(int timeout){
@@ -160,14 +171,16 @@ public class QuerySender {
 		return result;
     }
 
-    /** see above, default timeout, -1 **/
+    /** Send sync command with no timeout
+	 * @return String ack message from server
+	 **/
     public String sendSync(){
 		return sendSync(-1);
     }
 
-    /** send change threshold message to server
-     * @param threshold float value for new threshold
-     * @param timeout milliseconds
+    /** Send threshold value to server. Change threshold for later responses.
+     * @param threshold 
+     * @param timeout (in millisecs)
      * @return Float returned value from server
      **/
     public Float sendThreshold(float threshold, int timeout){
@@ -188,14 +201,17 @@ public class QuerySender {
 		return result;
     }
 
-    /** see above with default timeout, -1 **/
+    /** Send threshold value to server with no timeout.
+	 * @param threshold
+	 * @return Float returned value from server 
+	 **/
     public Float sendThreshold(float threshold){
 		return sendThreshold(threshold, -1);
     }
 
-    /** send list of id int's to server to delete
-     * @param deleteIds list of int ids represented as strings
-     * @param timeout milliseconds
+    /** Send ID value to server for scheduled deletion
+     * @param idValue 
+     * @param timeout (in millisecs)
      * @return String ack from server
      **/
     public String sendDeletes(Integer idValue, int timeout){
@@ -214,18 +230,21 @@ public class QuerySender {
 		return result;
     }
 
-    /** see above with default timeout, -1 **/
+    /** Send ID value to server for scheduled deletion without timeout
+	 * @param idValue
+	 * @return String ack
+	 **/
     public String sendDeletes(Integer idValue){
 		return sendDeletes(idValue, -1);
     }
 	
-    /** send query command to server 
-     * @param hasharray array of hash values to look up
-     * @param toggles 2d byte array, nbframesxp designating which bit positions of
-     *        each hash value most likely to toggle to find more candidate lookups.
-     * @param threshold float value for lookup threshold
-     * @param timeout milliseconds
-     * @return List<MatchResult> list of found items
+    /** Send query command to server 
+     * @param hasharray 
+     * @param toggles bit positions of each hash frame to toggle to get more lookup candidates.
+     * @param threshold
+	 * @param blockSize 
+     * @param timeout (in millisecs)
+     * @return List<MatchResult> List of Matches
      **/;
     public List<MatchResult> sendQuery(int[] hasharray, int[] toggles, float threshold, int blockSize, int timeout){
 		command[0] = 7;
@@ -272,7 +291,14 @@ public class QuerySender {
 		return retList;
     }
 
-    /** see above with default timeout, -1 **/
+    /** 
+	 * Send query command to server
+	 * @param hasharray
+	 * @param toggles
+	 * @param threshold
+	 * @param blockSize
+	 * @return List<MatchResult>
+	 **/
     public List<MatchResult> sendQuery(int[] hasharray, int[] toggles, float threshold, int blockSize){
 		return sendQuery(hasharray, toggles, threshold, blockSize, -1);
     }
@@ -301,15 +327,19 @@ public class QuerySender {
 		return id;
     }
  
-    /** see above, with default timeout, -1 **/
+    /** Send new submission to server with no timeout
+	 *  @param hasharray
+	 *  @param metadataStr
+	 *  @return Integer new assigned id
+	 **/
     public Integer sendSubmission(int[] hasharray, String metadataStr){
 		return sendSubmission(hasharray, metadataStr, -1);
     }
 
-    /** send new submission to server
-     * @param hasharray int[] hash array
-     * @param metadataBytes array of bytes, byte[] of metadata
-     * @param timeout milliseconds
+    /** Send new submission to server
+     * @param hasharray 
+     * @param metadataBytes 
+     * @param timeout (in millisecs)
      * @return Integer new assigned id
      **/
     public Integer sendSubmission(int[] hasharray, byte[] metadataBytes, int timeout){
@@ -337,13 +367,17 @@ public class QuerySender {
 		return id;
     }
 
-    /** See above, with default timeout, -1 **/
+    /** Send new submission to server with no timeout.
+	 * @param hasharray
+	 * @param metadataBytes
+	 * @return Integer new assigned id
+	 **/
     public Integer sendSubmission(int[] hasharray, byte[] metadataBytes){
 		return sendSubmission(hasharray, metadataBytes, -1);
     }
 
-    /** close connection 
-     *
+    /** 
+     * Close connection
      **/
     public void close(){
 		zmqctx.close();

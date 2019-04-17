@@ -29,7 +29,6 @@ public class TestAudioHasher {
 		
 		this.hasher = new AudioHasher(sr);
 		assert(hasher != null);
-		System.out.println("Done.");
     }
 
     @Test public void testCalc(){
